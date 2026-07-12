@@ -90,30 +90,11 @@ button { font-family: var(--comus-font); }
 
 .doc-mobile-toggle { display: none; }
 
-/* ── 디자인 시스템 셸 ───────────────────────────────── */
-.ds-shell { display: flex; align-items: flex-start; }
-.ds-side {
-  position: sticky; top: var(--site-header-h);
-  height: calc(100vh - var(--site-header-h));
-  width: 248px; flex-shrink: 0;
-  border-right: 1px solid var(--comus-line); background: #fff;
-  padding: 26px 22px; display: flex; flex-direction: column;
-  overflow-y: auto;
+/* ── 디자인 시스템 섹션 (가이드와 같은 doc-shell 레이아웃 사용) ── */
+.ds-section {
+  padding: 44px 0; border-top: 1px solid var(--comus-line);
+  scroll-margin-top: calc(var(--site-header-h) + 12px);
 }
-.ds-side-grp {
-  font-family: var(--comus-font-mono); font-size: 10.5px;
-  letter-spacing: 1px; text-transform: uppercase; color: var(--comus-placeholder);
-  font-weight: 700; margin-bottom: 8px; padding-left: 10px;
-}
-.ds-side-link {
-  display: block; text-decoration: none; font-size: 13.5px; font-weight: 600;
-  color: var(--comus-sub); padding: 7px 10px; border-radius: 9px; transition: all .12s;
-}
-.ds-side-link:hover { background: var(--comus-bg); color: var(--comus-text); }
-.ds-side-link.on { background: var(--comus-orange-soft); color: var(--comus-orange); font-weight: 700; }
-.ds-main { flex: 1; min-width: 0; }
-.ds-content { max-width: 940px; margin: 0 auto; padding: 56px 48px 40px; }
-.ds-section { padding: 44px 0; border-top: 1px solid var(--comus-line); }
 .ds-section:first-child { border-top: none; padding-top: 8px; }
 
 /* 웹 컴포넌트 프리뷰 래퍼 */
@@ -132,9 +113,7 @@ button { font-family: var(--comus-font); }
     border-radius: 12px; padding: 10px 14px; font-size: 13.5px; font-weight: 700;
     color: var(--comus-text); width: 100%;
   }
-  .doc-main { padding-top: 24px; max-width: none; }
-  .ds-side { display: none; }
-  .ds-content { padding: 40px 22px; }
+  .doc-main { padding-top: 24px; max-width: none !important; }
   .site-nav a { padding: 8px 10px; font-size: 13.5px; }
   .site-header-in { padding: 0 16px; gap: 12px; }
   .hide-mobile { display: none !important; }

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { C } from '../../kit/tokens';
 import { Icon, IconName } from '../../kit/Icon';
 import { LogoMark } from '../../kit/primitives';
-import { DsSidebar, Section } from './chrome';
+import { DsSidebar, Section, DS_NAV } from './chrome';
 import { ColorSection, TypeSection, SpaceSection, RadiusSection, ShadowSection, IconSection } from './foundations';
 import { BadgeSection, ButtonSection, CardSection, AppNavSection, TopNavSection, WebCardSection, FooterSection } from './components';
 
@@ -84,6 +84,7 @@ const DS_SECTION_IDS = [
 
 export function DesignSystem() {
   const [active, setActive] = useState('intro');
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     const obs = new IntersectionObserver(
       (entries) => {
@@ -99,35 +100,41 @@ export function DesignSystem() {
     });
     return () => obs.disconnect();
   }, []);
+  const activeLabel = DS_NAV.flatMap((g) => g.items).find((it) => it.id === active)?.label ?? '';
   return (
-    <div className="ds-shell">
-      <DsSidebar active={active} />
-      <main className="ds-main">
-        <div className="ds-content">
-          <Hero />
-          <Principles />
-          <ColorSection />
-          <TypeSection />
-          <SpaceSection />
-          <RadiusSection />
-          <ShadowSection />
-          <IconSection />
-          <BadgeSection />
-          <ButtonSection />
-          <CardSection />
-          <AppNavSection />
-          <TopNavSection />
-          <WebCardSection />
-          <FooterSection />
-          <footer
-            style={{
-              padding: '60px 0 40px', color: C.ph, fontSize: 13, fontFamily: C.mono,
-              borderTop: `1px solid ${C.line}`, marginTop: 40,
-            }}
-          >
-            © 2026 COMUS Design System · 소비가 나눔이 되는 플랫폼
-          </footer>
-        </div>
+    <div className="doc-shell">
+      <button className="doc-mobile-toggle" onClick={() => setMenuOpen((v) => !v)}>
+        <Icon name={menuOpen ? 'x' : 'menu'} size={17} color={C.text} sw={2} />
+        {menuOpen ? '목차 닫기' : '목차 보기'}
+        <span style={{ marginLeft: 'auto', color: C.sub, fontWeight: 600, fontSize: 12.5 }}>
+          디자인 시스템 · {activeLabel}
+        </span>
+      </button>
+      <DsSidebar active={active} open={menuOpen} onNavigate={() => setMenuOpen(false)} />
+      <main className="doc-main" style={{ maxWidth: 940 }}>
+        <Hero />
+        <Principles />
+        <ColorSection />
+        <TypeSection />
+        <SpaceSection />
+        <RadiusSection />
+        <ShadowSection />
+        <IconSection />
+        <BadgeSection />
+        <ButtonSection />
+        <CardSection />
+        <AppNavSection />
+        <TopNavSection />
+        <WebCardSection />
+        <FooterSection />
+        <footer
+          style={{
+            padding: '60px 0 0', color: C.ph, fontSize: 13, fontFamily: C.mono,
+            borderTop: `1px solid ${C.line}`, marginTop: 40,
+          }}
+        >
+          © 2026 COMUS Design System · 소비가 나눔이 되는 플랫폼
+        </footer>
       </main>
     </div>
   );

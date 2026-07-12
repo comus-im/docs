@@ -30,29 +30,38 @@ export const DS_NAV = [
   ] },
 ];
 
-export function DsSidebar({ active }: { active: string }) {
+// 가이드(doc-shell)와 동일한 레이아웃의 사이드바
+export function DsSidebar({ active, open, onNavigate }: { active: string; open: boolean; onNavigate: () => void }) {
   return (
-    <aside className="ds-side">
-      <a href="#intro" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 11, marginBottom: 26 }}>
+    <aside className={`doc-side ${open ? '' : 'closed'}`}>
+      <a
+        href="#intro"
+        onClick={onNavigate}
+        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 11, marginBottom: 22 }}
+      >
         <LogoMark size={34} radius={11} iconSize={19} />
         <div style={{ lineHeight: 1.15 }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: -0.2 }}>COMUS</div>
-          <div style={{ fontSize: 11, color: C.sub, fontWeight: 600 }}>Design System</div>
+          <div style={{ fontSize: 11, color: C.sub, fontWeight: 600 }}>Design System · v1.0</div>
         </div>
       </a>
       <nav>
         {DS_NAV.map((grp) => (
-          <div key={grp.g} style={{ marginBottom: 18 }}>
-            <div className="ds-side-grp">{grp.g}</div>
+          <div key={grp.g} style={{ marginBottom: 22 }}>
+            <div className="doc-side-grp">{grp.g}</div>
             {grp.items.map((it) => (
-              <a key={it.id} href={'#' + it.id} className={'ds-side-link' + (active === it.id ? ' on' : '')}>
+              <a
+                key={it.id}
+                href={'#' + it.id}
+                onClick={onNavigate}
+                className={'doc-side-link' + (active === it.id ? ' on' : '')}
+              >
                 {it.label}
               </a>
             ))}
           </div>
         ))}
       </nav>
-      <div style={{ marginTop: 'auto', paddingTop: 20, fontSize: 11, color: C.ph, fontFamily: C.mono }}>v1.0 · 2026</div>
     </aside>
   );
 }
