@@ -6,6 +6,57 @@ export const REPO = 'comus-im/docs';
 const API = `https://api.github.com/repos/${REPO}`;
 export const BRANCH = 'main';
 
+/** comus-im 조직 OAuth 앱의 Client ID (Device Flow 로그인용).
+ *  비어 있으면 로그인 모달이 토큰 직접 입력 방식으로 동작한다. */
+export const OAUTH_CLIENT_ID = '';
+
+// ── GitHub Device Flow ───────────────────────────────────────
+// 관리자는 토큰 발급 없이 "GitHub로 로그인" → 코드 입력만 하면 된다.
+// github.com의 device flow 엔드포인트는 CORS를 지원한다.
+
+export interface DeviceCode {
+  device_code: string;
+  user_code: string;
+  verification_uri: string;
+  interval: number;
+  expires_in: number;
+}
+
+export async function startDeviceFlow(): Promise<DeviceCode> {
+  const res = await fetch('https://github.com/login/device/code', {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ client_id: OAUTH_CLIENT_ID, scope: 'repo' }),
+  });
+  if (!res.ok) throw new Error(`로그인 시작 실패 (${res.status})`);
+  return res.json();
+}
+
+export type DevicePoll =
+  | { status: 'ok'; token: string }
+  | { status: 'pending' }
+  | { status: 'slow_down' }
+  | { status: 'error'; message: string };
+
+export async function pollDeviceToken(deviceCode: string): Promise<DevicePoll> {
+  const res = await fetch('https://github.com/login/oauth/access_token', {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_id: OAUTH_CLIENT_ID,
+      device_code: deviceCode,
+      grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (data.access_token) return { status: 'ok', token: data.access_token };
+  if (data.error === 'authorization_pending') return { status: 'pending' };
+  if (data.error === 'slow_down') return { status: 'slow_down' };
+  if (data.error === 'expired_token') return { status: 'error', message: '코드가 만료됐습니다. 다시 시도해 주세요.' };
+  if (data.error === 'access_denied') return { status: 'error', message: '로그인이 거부됐습니다.' };
+  return { status: 'error', message: data.error_description ?? '로그인에 실패했습니다.' };
+}
+
 function headers(token: string) {
   return {
     Authorization: `Bearer ${token}`,

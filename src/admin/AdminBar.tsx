@@ -1,10 +1,10 @@
 // 관리자 플로팅 바 — 로그인(토큰), 편집 모드 토글, 게시(커밋), 초안 관리.
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { C } from '../kit/tokens';
 import { Icon } from '../kit/Icon';
 import { useAdmin } from './AdminContext';
 import { useContent } from '../content/store';
-import { putTextFile, putBinaryFile, REPO } from './github';
+import { putTextFile, putBinaryFile, REPO, OAUTH_CLIENT_ID, startDeviceFlow, pollDeviceToken, DeviceCode } from './github';
 import { DocSection } from '../content/types';
 
 const btn: React.CSSProperties = {
@@ -36,56 +36,198 @@ async function uploadPendingImages(token: string, guide: DocSection[]): Promise<
 
 function LoginModal({ onClose }: { onClose: () => void }) {
   const { signIn } = useAdmin();
-  const [t, setT] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Device Flow 상태
+  const [device, setDevice] = useState<DeviceCode | null>(null);
+  const [copied, setCopied] = useState(false);
+  const pollRef = useRef<number | null>(null);
+  // 토큰 직접 입력 (폴백)
+  const [showToken, setShowToken] = useState(!OAUTH_CLIENT_ID);
+  const [t, setT] = useState('');
+
+  const stopPolling = () => {
+    if (pollRef.current !== null) {
+      window.clearTimeout(pollRef.current);
+      pollRef.current = null;
+    }
+  };
+  useEffect(() => stopPolling, []);
+
+  const startLogin = async () => {
+    setErr(null);
+    setBusy(true);
+    try {
+      const dc = await startDeviceFlow();
+      setDevice(dc);
+      setBusy(false);
+      let interval = Math.max(dc.interval, 5);
+      const tick = async () => {
+        const r = await pollDeviceToken(dc.device_code);
+        if (r.status === 'ok') {
+          const e = await signIn(r.token);
+          if (e) {
+            setErr(e);
+            setDevice(null);
+          } else {
+            onClose();
+          }
+          return;
+        }
+        if (r.status === 'error') {
+          setErr(r.message);
+          setDevice(null);
+          return;
+        }
+        if (r.status === 'slow_down') interval += 5;
+        pollRef.current = window.setTimeout(tick, interval * 1000);
+      };
+      pollRef.current = window.setTimeout(tick, interval * 1000);
+    } catch (e) {
+      setBusy(false);
+      setErr(e instanceof Error ? e.message : '로그인 시작에 실패했습니다.');
+    }
+  };
+
   return (
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(34,34,34,0.4)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
       }}
-      onClick={onClose}
+      onClick={() => {
+        stopPolling();
+        onClose();
+      }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: '#fff', borderRadius: 22, padding: 28, width: 420, maxWidth: '100%', boxShadow: C.shadowCard }}
+        style={{ background: '#fff', borderRadius: 22, padding: 28, width: 440, maxWidth: '100%', boxShadow: C.shadowCard }}
       >
         <div style={{ fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: -0.4 }}>관리자 로그인</div>
-        <p style={{ margin: '10px 0 16px', fontSize: 13.5, lineHeight: 1.65, color: C.sub, fontWeight: 500 }}>
+        <p style={{ margin: '10px 0 18px', fontSize: 13.5, lineHeight: 1.65, color: C.sub, fontWeight: 500 }}>
           <code style={{ fontFamily: C.mono, fontSize: 12, background: C.blueSoft, color: C.blue, padding: '1px 6px', borderRadius: 5 }}>{REPO}</code>{' '}
-          저장소에 <b>쓰기 권한이 있는 GitHub 토큰</b>으로 인증합니다. 토큰은 이 브라우저에만 저장되며 GitHub API 외에는 전송되지 않습니다.
+          저장소에 쓰기 권한이 있는 GitHub 계정으로 로그인합니다. 인증 정보는 이 브라우저에만 저장됩니다.
         </p>
-        <input
-          type="password"
-          value={t}
-          onChange={(e) => setT(e.target.value)}
-          placeholder="github_pat_… 또는 ghp_…"
-          style={{
-            width: '100%', height: 44, borderRadius: 12, border: `1px solid ${C.line}`, padding: '0 14px',
-            fontFamily: C.mono, fontSize: 13, outline: 'none', color: C.text,
-          }}
-        />
-        {err && <div style={{ marginTop: 10, fontSize: 12.5, color: '#D92D20', fontWeight: 600 }}>{err}</div>}
-        <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>
-          <button style={{ ...btn, background: C.bg, color: C.sub }} onClick={onClose}>취소</button>
+
+        {OAUTH_CLIENT_ID && !device && (
           <button
-            style={{ ...btn, background: C.orange, color: '#fff', opacity: busy ? 0.6 : 1 }}
-            disabled={busy || !t.trim()}
-            onClick={async () => {
-              setBusy(true);
-              const e = await signIn(t);
-              setBusy(false);
-              if (e) setErr(e);
-              else onClose();
+            style={{
+              ...btn, width: '100%', justifyContent: 'center', height: 50, fontSize: 15,
+              background: C.text, color: '#fff', opacity: busy ? 0.6 : 1,
             }}
+            disabled={busy}
+            onClick={startLogin}
           >
-            {busy ? '확인 중…' : '로그인'}
+            <Icon name="shield" size={18} color="#fff" sw={2} />
+            {busy ? '준비 중…' : 'GitHub로 로그인'}
           </button>
-        </div>
-        <p style={{ margin: '16px 0 0', fontSize: 11.5, lineHeight: 1.6, color: C.ph, fontWeight: 500 }}>
-          토큰 발급: GitHub → Settings → Developer settings → Fine-grained tokens → 이 저장소에 Contents: Read and write 권한.
-        </p>
+        )}
+
+        {device && (
+          <div style={{ background: C.bg, border: `1px solid ${C.line}`, borderRadius: 16, padding: 20, textAlign: 'center' }}>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: C.sub, marginBottom: 10 }}>
+              아래 코드를 GitHub 인증 페이지에 입력하세요
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard?.writeText(device.user_code);
+                setCopied(true);
+                window.setTimeout(() => setCopied(false), 1500);
+              }}
+              title="클릭해서 복사"
+              style={{
+                border: `1.5px dashed ${C.orangeSoft2}`, background: '#fff', cursor: 'pointer',
+                borderRadius: 12, padding: '10px 18px', fontFamily: C.mono, fontSize: 24,
+                fontWeight: 700, letterSpacing: 3, color: C.text,
+              }}
+            >
+              {device.user_code}
+            </button>
+            <div style={{ fontSize: 11.5, color: copied ? C.green : C.ph, fontWeight: 600, marginTop: 7 }}>
+              {copied ? '복사됨!' : '클릭하면 복사됩니다'}
+            </div>
+            <a
+              href={device.verification_uri}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                ...btn, background: C.orange, color: '#fff', textDecoration: 'none',
+                justifyContent: 'center', marginTop: 14, display: 'flex',
+              }}
+            >
+              GitHub에서 코드 입력하기
+            </a>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12 }}>
+              <span
+                style={{
+                  width: 8, height: 8, borderRadius: 999, background: C.orange,
+                  animation: 'comusPulse 1.2s ease-in-out infinite',
+                }}
+              />
+              <span style={{ fontSize: 12, color: C.sub, fontWeight: 600 }}>인증 완료를 기다리는 중…</span>
+            </div>
+          </div>
+        )}
+
+        {err && <div style={{ marginTop: 12, fontSize: 12.5, color: '#D92D20', fontWeight: 600 }}>{err}</div>}
+
+        {/* 토큰 직접 입력 (폴백) */}
+        {!device && (
+          <div style={{ marginTop: 16 }}>
+            {OAUTH_CLIENT_ID && (
+              <button
+                style={{
+                  border: 'none', background: 'none', cursor: 'pointer', padding: 0,
+                  fontSize: 12, fontWeight: 600, color: C.ph, fontFamily: C.font, textDecoration: 'underline',
+                }}
+                onClick={() => setShowToken(!showToken)}
+              >
+                {showToken ? '토큰 입력 숨기기' : '토큰으로 직접 로그인'}
+              </button>
+            )}
+            {showToken && (
+              <div style={{ marginTop: OAUTH_CLIENT_ID ? 10 : 0 }}>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="password"
+                    value={t}
+                    onChange={(e) => setT(e.target.value)}
+                    placeholder="github_pat_… 또는 ghp_…"
+                    style={{
+                      flex: 1, height: 44, borderRadius: 12, border: `1px solid ${C.line}`, padding: '0 14px',
+                      fontFamily: C.mono, fontSize: 13, outline: 'none', color: C.text,
+                    }}
+                  />
+                  <button
+                    style={{ ...btn, background: C.orange, color: '#fff', opacity: busy ? 0.6 : 1 }}
+                    disabled={busy || !t.trim()}
+                    onClick={async () => {
+                      setBusy(true);
+                      const e = await signIn(t);
+                      setBusy(false);
+                      if (e) setErr(e);
+                      else onClose();
+                    }}
+                  >
+                    로그인
+                  </button>
+                </div>
+                <p style={{ margin: '10px 0 0', fontSize: 11.5, lineHeight: 1.6, color: C.ph, fontWeight: 500 }}>
+                  <a
+                    href="https://github.com/settings/tokens/new?scopes=repo&description=COMUS%20Docs%20Admin"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ fontWeight: 700 }}
+                  >
+                    토큰 만들기
+                  </a>
+                  {' '}— repo 권한이 미리 선택된 페이지가 열립니다. Generate 후 복사해 붙여넣으세요.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

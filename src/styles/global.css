@@ -30,6 +30,7 @@
 }
 
 * { box-sizing: border-box; }
+@keyframes comusPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 html, body { margin: 0; background: var(--comus-bg); }
 body {
   font-family: var(--comus-font);
