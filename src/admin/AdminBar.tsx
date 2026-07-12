@@ -1,0 +1,189 @@
+// 관리자 플로팅 바 — 로그인(토큰), 편집 모드 토글, 게시(커밋), 초안 관리.
+import React, { useState } from 'react';
+import { C } from '../kit/tokens';
+import { Icon } from '../kit/Icon';
+import { useAdmin } from './AdminContext';
+import { useContent } from '../content/store';
+import { putTextFile, putBinaryFile, REPO } from './github';
+import { DocSection } from '../content/types';
+
+const btn: React.CSSProperties = {
+  border: 'none', cursor: 'pointer', borderRadius: 10, padding: '9px 14px',
+  fontSize: 13, fontWeight: 700, fontFamily: C.font, letterSpacing: -0.2,
+  display: 'inline-flex', alignItems: 'center', gap: 6,
+};
+
+/** data URL 이미지 블록을 저장소 업로드로 치환한 새 guide를 돌려준다. */
+async function uploadPendingImages(token: string, guide: DocSection[]): Promise<DocSection[]> {
+  const next: DocSection[] = JSON.parse(JSON.stringify(guide));
+  let n = 0;
+  for (const sec of next) {
+    for (const page of sec.pages) {
+      for (const b of page.blocks) {
+        if (b.t === 'img' && b.src.startsWith('data:')) {
+          const m = b.src.match(/^data:image\/(png|jpeg|jpg|gif|webp);base64,(.+)$/);
+          if (!m) throw new Error('지원하지 않는 이미지 형식입니다. (png/jpg/gif/webp)');
+          const ext = m[1] === 'jpeg' ? 'jpg' : m[1];
+          const name = `uploads/${Date.now()}-${n++}.${ext}`;
+          await putBinaryFile(token, `public/${name}`, m[2], `docs: 이미지 업로드 (${page.title})`);
+          b.src = name;
+        }
+      }
+    }
+  }
+  return next;
+}
+
+function LoginModal({ onClose }: { onClose: () => void }) {
+  const { signIn } = useAdmin();
+  const [t, setT] = useState('');
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(34,34,34,0.4)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+      }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ background: '#fff', borderRadius: 22, padding: 28, width: 420, maxWidth: '100%', boxShadow: C.shadowCard }}
+      >
+        <div style={{ fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: -0.4 }}>관리자 로그인</div>
+        <p style={{ margin: '10px 0 16px', fontSize: 13.5, lineHeight: 1.65, color: C.sub, fontWeight: 500 }}>
+          <code style={{ fontFamily: C.mono, fontSize: 12, background: C.blueSoft, color: C.blue, padding: '1px 6px', borderRadius: 5 }}>{REPO}</code>{' '}
+          저장소에 <b>쓰기 권한이 있는 GitHub 토큰</b>으로 인증합니다. 토큰은 이 브라우저에만 저장되며 GitHub API 외에는 전송되지 않습니다.
+        </p>
+        <input
+          type="password"
+          value={t}
+          onChange={(e) => setT(e.target.value)}
+          placeholder="github_pat_… 또는 ghp_…"
+          style={{
+            width: '100%', height: 44, borderRadius: 12, border: `1px solid ${C.line}`, padding: '0 14px',
+            fontFamily: C.mono, fontSize: 13, outline: 'none', color: C.text,
+          }}
+        />
+        {err && <div style={{ marginTop: 10, fontSize: 12.5, color: '#D92D20', fontWeight: 600 }}>{err}</div>}
+        <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>
+          <button style={{ ...btn, background: C.bg, color: C.sub }} onClick={onClose}>취소</button>
+          <button
+            style={{ ...btn, background: C.orange, color: '#fff', opacity: busy ? 0.6 : 1 }}
+            disabled={busy || !t.trim()}
+            onClick={async () => {
+              setBusy(true);
+              const e = await signIn(t);
+              setBusy(false);
+              if (e) setErr(e);
+              else onClose();
+            }}
+          >
+            {busy ? '확인 중…' : '로그인'}
+          </button>
+        </div>
+        <p style={{ margin: '16px 0 0', fontSize: 11.5, lineHeight: 1.6, color: C.ph, fontWeight: 500 }}>
+          토큰 발급: GitHub → Settings → Developer settings → Fine-grained tokens → 이 저장소에 Contents: Read and write 권한.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function AdminBar() {
+  const { token, login, editMode, setEditMode, signOut } = useAdmin();
+  const { guide, hasDraft, update, discardDraft } = useContent();
+  const [modal, setModal] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const publish = async () => {
+    if (!token) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      const resolved = await uploadPendingImages(token, guide);
+      await putTextFile(token, 'src/content/guide-data.json', JSON.stringify(resolved, null, 2), 'docs: 가이드 콘텐츠 수정 (관리자 편집)');
+      update(resolved);
+      setMsg('게시 완료 — 배포까지 1~2분 걸립니다.');
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : '게시에 실패했습니다.');
+    }
+    setBusy(false);
+  };
+
+  return (
+    <>
+      {modal && <LoginModal onClose={() => setModal(false)} />}
+      <div
+        style={{
+          position: 'fixed', right: 18, bottom: 18, zIndex: 90,
+          display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8,
+        }}
+      >
+        {msg && (
+          <div
+            style={{
+              background: '#fff', border: `1px solid ${C.line}`, borderRadius: 12, padding: '10px 14px',
+              fontSize: 12.5, fontWeight: 600, color: C.text, boxShadow: C.shadowSoft, maxWidth: 300,
+            }}
+          >
+            {msg}
+          </div>
+        )}
+        {!token ? (
+          <button
+            onClick={() => setModal(true)}
+            title="관리자 로그인"
+            style={{
+              ...btn, background: '#fff', color: C.sub, border: `1px solid ${C.line}`,
+              borderRadius: 999, boxShadow: C.shadowSoft, padding: '10px 16px',
+            }}
+          >
+            <Icon name="shield" size={15} color={C.sub} sw={1.9} />
+            관리자
+          </button>
+        ) : (
+          <div
+            style={{
+              background: '#fff', border: `1px solid ${C.line}`, borderRadius: 16, padding: 10,
+              display: 'flex', alignItems: 'center', gap: 8, boxShadow: C.shadowCard, flexWrap: 'wrap',
+            }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.sub, padding: '0 4px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Icon name="shield" size={14} color={C.green} sw={2} />
+              {login ?? '관리자'}
+            </span>
+            <button
+              style={{ ...btn, background: editMode ? C.orange : C.orangeSoft, color: editMode ? '#fff' : C.orange }}
+              onClick={() => setEditMode(!editMode)}
+            >
+              {editMode ? '편집 중' : '편집 모드'}
+            </button>
+            <button
+              style={{ ...btn, background: hasDraft ? C.text : C.bg, color: hasDraft ? '#fff' : C.ph, opacity: busy ? 0.6 : 1 }}
+              disabled={!hasDraft || busy}
+              onClick={publish}
+            >
+              {busy ? '게시 중…' : '게시'}
+            </button>
+            {hasDraft && (
+              <button
+                style={{ ...btn, background: C.bg, color: C.sub }}
+                onClick={() => {
+                  if (confirm('로컬 초안을 버리고 게시된 버전으로 되돌릴까요?')) discardDraft();
+                }}
+              >
+                되돌리기
+              </button>
+            )}
+            <button style={{ ...btn, background: 'none', color: C.ph, padding: '9px 6px' }} onClick={signOut} title="로그아웃">
+              <Icon name="x" size={14} color={C.ph} sw={2.2} />
+            </button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}

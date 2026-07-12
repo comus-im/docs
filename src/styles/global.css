@@ -1,0 +1,141 @@
+/* COMUS Docs 전역 스타일 — 디자인 시스템 토큰 기반 */
+:root {
+  /* Brand */
+  --comus-orange: #FE5C00;
+  --comus-orange-press: #E24F00;
+  --comus-orange-soft: #FFF1E9;
+  --comus-orange-soft-2: #FFE5D6;
+  --comus-blue: #4E6274;
+  --comus-blue-soft: #EEF2F6;
+  /* Neutral */
+  --comus-bg: #F8F9FB;
+  --comus-surface: #FFFFFF;
+  --comus-text: #222222;
+  --comus-sub: #6B7280;
+  --comus-placeholder: #9AA5B1;
+  --comus-line: #EDF0F3;
+  /* Semantic */
+  --comus-success: #16A34A;
+  --comus-success-soft: #E7F6EC;
+  --comus-star: #FFB020;
+  /* Type */
+  --comus-font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --comus-font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  /* Shadow */
+  --comus-shadow-soft: 0 6px 14px rgba(34, 34, 34, 0.06);
+  --comus-shadow-card: 0 18px 34px rgba(34, 34, 34, 0.08);
+  --comus-glow-orange: 0 8px 20px rgba(254, 92, 0, 0.28);
+  /* Layout */
+  --site-header-h: 64px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--comus-bg); }
+body {
+  font-family: var(--comus-font);
+  color: var(--comus-text);
+  -webkit-font-smoothing: antialiased;
+}
+#root, #root * { word-break: keep-all; }
+a { color: var(--comus-orange); }
+a:hover { color: var(--comus-orange-press); }
+button { font-family: var(--comus-font); }
+::selection { background: var(--comus-orange-soft-2); }
+
+/* ── 글로벌 사이트 헤더 ─────────────────────────────── */
+.site-header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(248, 249, 251, 0.86);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--comus-line);
+}
+.site-header-in {
+  max-width: 1280px; margin: 0 auto; height: var(--site-header-h);
+  padding: 0 24px; display: flex; align-items: center; gap: 24px;
+}
+.site-nav { display: flex; align-items: center; gap: 4px; }
+.site-nav a {
+  text-decoration: none; padding: 8px 14px; border-radius: 10px;
+  font-size: 14.5px; font-weight: 600; color: var(--comus-sub);
+  transition: all .12s;
+}
+.site-nav a:hover { color: var(--comus-text); background: var(--comus-surface); }
+.site-nav a.on { color: var(--comus-orange); background: var(--comus-orange-soft); font-weight: 700; }
+
+/* ── 문서 셸 (가이드) ───────────────────────────────── */
+.doc-shell {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: flex-start; gap: 48px;
+}
+.doc-side {
+  position: sticky; top: var(--site-header-h);
+  width: 264px; flex-shrink: 0;
+  height: calc(100vh - var(--site-header-h));
+  overflow-y: auto; padding: 28px 4px 40px 0;
+}
+.doc-side::-webkit-scrollbar { width: 0; }
+.doc-side-grp {
+  font-family: var(--comus-font-mono); font-size: 10.5px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--comus-placeholder);
+  font-weight: 700; margin: 0 0 8px; padding-left: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.doc-side-link {
+  display: block; text-decoration: none; font-size: 13.5px; font-weight: 600;
+  color: var(--comus-sub); padding: 7px 10px; border-radius: 9px; transition: all .12s;
+}
+.doc-side-link:hover { background: #fff; color: var(--comus-text); }
+.doc-side-link.on { background: var(--comus-orange-soft); color: var(--comus-orange); font-weight: 700; }
+.doc-main { flex: 1; min-width: 0; max-width: 760px; padding: 40px 0 80px; }
+
+.doc-mobile-toggle { display: none; }
+
+/* ── 디자인 시스템 셸 ───────────────────────────────── */
+.ds-shell { display: flex; align-items: flex-start; }
+.ds-side {
+  position: sticky; top: var(--site-header-h);
+  height: calc(100vh - var(--site-header-h));
+  width: 248px; flex-shrink: 0;
+  border-right: 1px solid var(--comus-line); background: #fff;
+  padding: 26px 22px; display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.ds-side-grp {
+  font-family: var(--comus-font-mono); font-size: 10.5px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--comus-placeholder);
+  font-weight: 700; margin-bottom: 8px; padding-left: 10px;
+}
+.ds-side-link {
+  display: block; text-decoration: none; font-size: 13.5px; font-weight: 600;
+  color: var(--comus-sub); padding: 7px 10px; border-radius: 9px; transition: all .12s;
+}
+.ds-side-link:hover { background: var(--comus-bg); color: var(--comus-text); }
+.ds-side-link.on { background: var(--comus-orange-soft); color: var(--comus-orange); font-weight: 700; }
+.ds-main { flex: 1; min-width: 0; }
+.ds-content { max-width: 940px; margin: 0 auto; padding: 56px 48px 40px; }
+.ds-section { padding: 44px 0; border-top: 1px solid var(--comus-line); }
+.ds-section:first-child { border-top: none; padding-top: 8px; }
+
+/* 웹 컴포넌트 프리뷰 래퍼 */
+.cw-wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+
+/* ── 모바일 ─────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .doc-shell { flex-direction: column; gap: 0; }
+  .doc-side {
+    position: static; width: 100%; height: auto; padding: 20px 0 0;
+  }
+  .doc-side.closed { display: none; }
+  .doc-mobile-toggle {
+    display: flex; align-items: center; gap: 8px; margin: 20px 0 0;
+    border: 1px solid var(--comus-line); background: #fff; cursor: pointer;
+    border-radius: 12px; padding: 10px 14px; font-size: 13.5px; font-weight: 700;
+    color: var(--comus-text); width: 100%;
+  }
+  .doc-main { padding-top: 24px; max-width: none; }
+  .ds-side { display: none; }
+  .ds-content { padding: 40px 22px; }
+  .site-nav a { padding: 8px 10px; font-size: 13.5px; }
+  .site-header-in { padding: 0 16px; gap: 12px; }
+  .hide-mobile { display: none !important; }
+}
