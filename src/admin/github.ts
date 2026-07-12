@@ -6,13 +6,19 @@ export const REPO = 'comus-im/docs';
 const API = `https://api.github.com/repos/${REPO}`;
 export const BRANCH = 'main';
 
-/** comus-im 조직 OAuth 앱의 Client ID (Device Flow 로그인용).
- *  비어 있으면 로그인 모달이 토큰 직접 입력 방식으로 동작한다. */
-export const OAUTH_CLIENT_ID = '';
+/** comus-im 조직 OAuth 앱의 Client ID (Device Flow 로그인용). */
+export const OAUTH_CLIENT_ID = 'Ov23liDT3zZIyt0xBSvp';
 
-// ── GitHub Device Flow ───────────────────────────────────────
+/** Device Flow 중계 프록시 (auth-proxy/worker.js를 Cloudflare Worker로 배포한 주소).
+ *  github.com/login/* 엔드포인트는 CORS를 지원하지 않아 프록시가 필요하다.
+ *  비어 있으면 로그인 모달이 토큰 직접 입력 방식으로 동작한다. */
+export const AUTH_PROXY = '';
+
+/** GitHub 로그인 버튼 노출 조건 */
+export const DEVICE_LOGIN_ENABLED = Boolean(OAUTH_CLIENT_ID && AUTH_PROXY);
+
+// ── GitHub Device Flow (프록시 경유) ─────────────────────────
 // 관리자는 토큰 발급 없이 "GitHub로 로그인" → 코드 입력만 하면 된다.
-// github.com의 device flow 엔드포인트는 CORS를 지원한다.
 
 export interface DeviceCode {
   device_code: string;
@@ -23,7 +29,7 @@ export interface DeviceCode {
 }
 
 export async function startDeviceFlow(): Promise<DeviceCode> {
-  const res = await fetch('https://github.com/login/device/code', {
+  const res = await fetch(`${AUTH_PROXY}/device/code`, {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify({ client_id: OAUTH_CLIENT_ID, scope: 'repo' }),
@@ -39,7 +45,7 @@ export type DevicePoll =
   | { status: 'error'; message: string };
 
 export async function pollDeviceToken(deviceCode: string): Promise<DevicePoll> {
-  const res = await fetch('https://github.com/login/oauth/access_token', {
+  const res = await fetch(`${AUTH_PROXY}/oauth/access_token`, {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify({

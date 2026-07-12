@@ -4,7 +4,7 @@ import { C } from '../kit/tokens';
 import { Icon } from '../kit/Icon';
 import { useAdmin } from './AdminContext';
 import { useContent } from '../content/store';
-import { putTextFile, putBinaryFile, REPO, OAUTH_CLIENT_ID, startDeviceFlow, pollDeviceToken, DeviceCode } from './github';
+import { putTextFile, putBinaryFile, REPO, DEVICE_LOGIN_ENABLED, startDeviceFlow, pollDeviceToken, DeviceCode } from './github';
 import { DocSection } from '../content/types';
 
 const btn: React.CSSProperties = {
@@ -43,7 +43,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   const [copied, setCopied] = useState(false);
   const pollRef = useRef<number | null>(null);
   // 토큰 직접 입력 (폴백)
-  const [showToken, setShowToken] = useState(!OAUTH_CLIENT_ID);
+  const [showToken, setShowToken] = useState(!DEVICE_LOGIN_ENABLED);
   const [t, setT] = useState('');
 
   const stopPolling = () => {
@@ -110,7 +110,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
           저장소에 쓰기 권한이 있는 GitHub 계정으로 로그인합니다. 인증 정보는 이 브라우저에만 저장됩니다.
         </p>
 
-        {OAUTH_CLIENT_ID && !device && (
+        {DEVICE_LOGIN_ENABLED && !device && (
           <button
             style={{
               ...btn, width: '100%', justifyContent: 'center', height: 50, fontSize: 15,
@@ -175,7 +175,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
         {/* 토큰 직접 입력 (폴백) */}
         {!device && (
           <div style={{ marginTop: 16 }}>
-            {OAUTH_CLIENT_ID && (
+            {DEVICE_LOGIN_ENABLED && (
               <button
                 style={{
                   border: 'none', background: 'none', cursor: 'pointer', padding: 0,
@@ -187,7 +187,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               </button>
             )}
             {showToken && (
-              <div style={{ marginTop: OAUTH_CLIENT_ID ? 10 : 0 }}>
+              <div style={{ marginTop: DEVICE_LOGIN_ENABLED ? 10 : 0 }}>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input
                     type="password"
