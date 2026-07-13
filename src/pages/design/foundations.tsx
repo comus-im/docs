@@ -106,7 +106,7 @@ export function TypeSection() {
           <div
             key={t.label}
             style={{
-              display: 'flex', alignItems: 'baseline', gap: 20, padding: '20px 22px',
+              display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 20, padding: '20px 22px',
               borderTop: i ? `1px solid ${C.line}` : 'none', background: '#fff',
             }}
           >
@@ -119,7 +119,7 @@ export function TypeSection() {
             </div>
             <div
               style={{
-                flex: 1, minWidth: 0, fontSize: t.px, fontWeight: t.w, letterSpacing: t.tr,
+                flex: '1 1 220px', minWidth: 0, fontSize: t.px, fontWeight: t.w, letterSpacing: t.tr,
                 color: C.text, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}
             >
@@ -155,7 +155,7 @@ export function SpaceSection() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {DS_SPACE.map((s) => (
           <div key={s.v} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <code style={{ fontFamily: C.mono, fontSize: 12, color: C.blue, width: 170, flexShrink: 0 }}>{s.v}</code>
+            <code style={{ fontFamily: C.mono, fontSize: 12, color: C.blue, width: 150, flexShrink: 0 }}>{s.v}</code>
             <div style={{ height: 18, width: s.px, background: C.orange, borderRadius: 4, flexShrink: 0 }} />
             <span style={{ fontSize: 13, color: C.sub, fontWeight: 600 }}>
               {s.px}px{s.tag ? ` · ${s.tag}` : ''}

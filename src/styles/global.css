@@ -37,7 +37,7 @@ body {
   color: var(--comus-text);
   -webkit-font-smoothing: antialiased;
 }
-#root, #root * { word-break: keep-all; }
+#root, #root * { word-break: keep-all; overflow-wrap: break-word; }
 a { color: var(--comus-orange); }
 a:hover { color: var(--comus-orange-press); }
 button { font-family: var(--comus-font); }
@@ -101,9 +101,19 @@ button { font-family: var(--comus-font); }
 /* 웹 컴포넌트 프리뷰 래퍼 */
 .cw-wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
 
+/* 고정폭 데모 컴포넌트용 가로 스크롤 래퍼 */
+.cw-scroll-x { overflow-x: auto; }
+.cw-scroll-x::-webkit-scrollbar { height: 0; }
+
+/* 푸터 프리뷰 그리드 */
+.cw-footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 32px; padding: 48px 0; }
+@media (max-width: 860px) { .cw-footer-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .cw-footer-grid { grid-template-columns: 1fr; } }
+
 /* ── 모바일 ─────────────────────────────────────────── */
 @media (max-width: 960px) {
-  .doc-shell { flex-direction: column; gap: 0; }
+  .doc-shell { flex-direction: column; gap: 0; align-items: stretch; }
+  .doc-main { width: 100%; }
   .doc-side {
     position: static; width: 100%; height: auto; padding: 20px 0 0;
   }
@@ -118,4 +128,15 @@ button { font-family: var(--comus-font); }
   .site-nav a { padding: 8px 10px; font-size: 13.5px; }
   .site-header-in { padding: 0 16px; gap: 12px; }
   .hide-mobile { display: none !important; }
+}
+
+/* ── 소형 폰 ────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .site-header-in { padding: 0 12px; gap: 8px; }
+  .site-nav { gap: 0; }
+  .site-nav a { padding: 7px 8px; font-size: 12.5px; }
+  .doc-shell { padding: 0 16px; }
+  .cw-wrap { padding-left: 16px; padding-right: 16px; }
+  .ds-section { padding: 32px 0; }
+  .ds-section > header h2 { font-size: 27px !important; letter-spacing: -0.8px !important; }
 }

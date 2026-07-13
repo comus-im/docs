@@ -96,7 +96,7 @@ function DemoFooter() {
   ];
   return (
     <footer style={{ marginTop: 80, borderTop: `1px solid ${C.line}`, background: C.surface }}>
-      <div className="cw-wrap" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr', gap: 32, padding: '48px 0' }}>
+      <div className="cw-wrap cw-footer-grid">
         <div>
           <a href="#" onClick={stop} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 9 }}>
             <LogoMark />
@@ -124,6 +124,7 @@ function DemoFooter() {
         style={{
           borderTop: `1px solid ${C.line}`, padding: '20px 0',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          flexWrap: 'wrap', gap: 8,
         }}
       >
         <span style={{ fontSize: 12.5, color: C.ph, fontFamily: C.mono }}>© 2026 COMUS · Social Impact Commerce</span>
@@ -170,12 +171,12 @@ export function ButtonSection() {
     >
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
         <Spec title="Primary CTA" note="화면 하단 고정 주요 행동." tokens={['--comus-orange', '--comus-glow-orange', 'radius-lg', 'h 56']}>
-          <div style={{ width: 300 }}>
+          <div style={{ width: '100%', maxWidth: 300 }}>
             <CTA icon="gift">결제하고 기부하기</CTA>
           </div>
         </Spec>
         <Spec title="Primary CTA — 아이콘 없이" tokens={['weight 700', 'fs-title 17']}>
-          <div style={{ width: 300 }}>
+          <div style={{ width: '100%', maxWidth: 300 }}>
             <CTA>장바구니 담기</CTA>
           </div>
         </Spec>
@@ -199,7 +200,7 @@ export function CardSection() {
         tokens={['--comus-surface', '--comus-line', 'radius-xl', 'shadow-card (hover)']}
         pad={28}
       >
-        <div style={{ width: 300 }}>
+        <div style={{ width: '100%', maxWidth: 300 }}>
           <WebProductCard p={DS_PROD} />
         </div>
       </Spec>
@@ -223,7 +224,7 @@ export function AppNavSection() {
           </div>
         </Spec>
         <Spec title="SectionHead (앱)" note="fs-h3 800 + 전체보기 링크." tokens={['--comus-fs-h3', 'weight 800']}>
-          <div style={{ width: 300 }}>
+          <div style={{ width: '100%', maxWidth: 300 }}>
             <SectionHead title="인기 기부처" />
           </div>
         </Spec>
@@ -242,7 +243,11 @@ export function TopNavSection() {
       desc="스티키 반투명 헤더 + 블러. 로고 · 탭 · 검색 · 포인트 · 장바구니 · 아바타. 활성 탭은 orangeSoft 알약 배경."
     >
       <div style={{ border: `1px solid ${C.line}`, borderRadius: 18, overflow: 'hidden', background: C.bg }}>
-        <DemoTopNav active="쇼핑" />
+        <div className="cw-scroll-x">
+          <div style={{ minWidth: 880 }}>
+            <DemoTopNav active="쇼핑" />
+          </div>
+        </div>
         <div style={{ height: 40 }} />
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 14 }}>

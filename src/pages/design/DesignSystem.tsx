@@ -21,7 +21,7 @@ function Hero() {
           Social Impact Commerce · v1.0
         </div>
       </div>
-      <h1 style={{ margin: 0, fontSize: 56, fontWeight: 800, letterSpacing: -2, lineHeight: 1.05, color: C.text }}>
+      <h1 style={{ margin: 0, fontSize: 'clamp(36px, 9vw, 56px)', fontWeight: 800, letterSpacing: -2, lineHeight: 1.05, color: C.text }}>
         COMUS
         <br />
         Design System
