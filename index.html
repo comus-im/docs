@@ -13,6 +13,35 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- 배포 직후 캐시된 옛 HTML이 삭제된 번들을 가리키면 흰 화면이 되므로,
+         번들 로드 실패 시 1회에 한해 자동 새로고침해 최신 HTML을 다시 받는다. -->
+    <script>
+      (function () {
+        var KEY = 'comus-auto-reload';
+        function reloadOnce() {
+          try {
+            if (sessionStorage.getItem(KEY)) return;
+            sessionStorage.setItem(KEY, '1');
+          } catch (e) {}
+          location.reload();
+        }
+        addEventListener(
+          'error',
+          function (e) {
+            var t = e.target;
+            if (t && t.tagName === 'SCRIPT' && t.src && t.src.indexOf('/assets/') !== -1) reloadOnce();
+          },
+          true
+        );
+        addEventListener('load', function () {
+          setTimeout(function () {
+            var root = document.getElementById('root');
+            if (root && !root.firstChild) reloadOnce();
+            else try { sessionStorage.removeItem(KEY); } catch (e) {}
+          }, 3000);
+        });
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
